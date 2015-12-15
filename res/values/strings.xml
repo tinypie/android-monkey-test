@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">monkeytest</string>
+    <string name="monkey_settings">Monkey Settings</string>
+    <string name="useDefault">UseDefault</string>
+    <string name="action_settings">action settings</string>
+    <string name="monkey_control">Monkey Control</string>
+    <string name="general_setting">general setting</string>
+    <string name="events_setting">events setting</string>
+    <string name="constraints_setting">constraints setting</string>
+    <string name="debugging_setting">debugging setting</string>
+    <string name="log_setting">log setting</string>
+    <string name="blacklist">select blacklist</string>
+    <string name="whitelist">select whitelist</string>
+    <string name="start">start</string>
+    <string name="stop">stop</string>
+    <string name="show_cmd">monkey cmd: </string>
+	<string name="result">monkey result: </string>
+    <!-- string name="android_log">/storage/emulated/legacy/monkey_log.txt</string -->
+    <string name="android_log">/cache/android.txt</string>
+	
+    <string name="scan_title">Scanning</string>
+    <string name="scan_tip">Scanning,Please wait...</string>
+    
+    <string name="blacklist_file"> /cache/blacklist.txt</string>
+    <string name="general_string"> -v</string>
+    <string name="events_string"> -s 1000 --pct-trackball 0 --pct-touch 0 --pct-motion 0 --pct-anyevent 0 --throttle 300 1200000000</string>
+    <string name="debugging_string"> --ignore-crashes --ignore-timeouts --ignore-security-exceptions --kill-process-after-error</string>
+	<string name="log_place">save andoid log:</string>
+	
+	<string name="speed_text">speed</string>
+    <string name="positive">OK</string>
+    <string name="negative">Cancel</string>
+    <string name="throttle_text">throttle</string>
+    <string name="pct_touch">pct-touch</string>
+    <string name="pct_motion">pct-motion </string>
+    <string name="pct_trackball">pct-trackball</string>
+
+    <string name="pct_nav">pct-nav</string>
+    <string name="pct_majornav">pct-majornav</string>
+    <string name="pct_syskeys">pct-syskeys</string>
+    <string name="pct_appswitch">pct-appswitch</string>
+    <string name="pct_anyevent">pct-anyevent</string>
+</resources>
