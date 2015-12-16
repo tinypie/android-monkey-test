@@ -139,7 +139,6 @@ public class MainActivity extends Activity implements OnClickListener {
             }
         }.start();
 
-<<<<<<< HEAD
     }
 
     @Override
@@ -147,8 +146,6 @@ public class MainActivity extends Activity implements OnClickListener {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
-=======
->>>>>>> ea2c469... fix some bugs
     }
 
     @Override
@@ -366,17 +363,10 @@ public class MainActivity extends Activity implements OnClickListener {
         input.setText(mLogFile);
         builder.setView(input);
 
-<<<<<<< HEAD
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String file = input.getText().toString();
-=======
-    	builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-    	    @Override
-    	    public void onClick(DialogInterface dialog, int which) {
-    	        String file = input.getText().toString();
->>>>>>> ea2c469... fix some bugs
                 mLogFile = file;
                 mLogSetting.setText(file);
                 Log.d(TAG, "set android log file to:" + file);
@@ -391,11 +381,7 @@ public class MainActivity extends Activity implements OnClickListener {
         builder.show();
     }
 
-<<<<<<< HEAD
     public void showEventsDialog() {
-=======
-	public void showEventsDialog() {
->>>>>>> ea2c469... fix some bugs
         LayoutInflater inflater = getLayoutInflater();
         View alertLayout = inflater.inflate(R.layout.event_dialog, null);
 
@@ -416,7 +402,6 @@ public class MainActivity extends Activity implements OnClickListener {
         anyevent.setText("0");
         touch.setText("0");
         motion.setText("0");
-<<<<<<< HEAD
 
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setTitle("event setting");
@@ -434,25 +419,6 @@ public class MainActivity extends Activity implements OnClickListener {
             public void onClick(DialogInterface dialog, int which) {
                 String sp = speed.getText().toString();
                 String th = throttle.getText().toString();
-=======
-		
-		AlertDialog.Builder alert = new AlertDialog.Builder(this);
-		alert.setTitle("event setting");
-		alert.setView(alertLayout);
-		alert.setCancelable(false);
-		alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-			public void onClick(DialogInterface dialog, int which) {
-    	        dialog.cancel();
-			}
-		});
-		
-		alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				String sp = speed.getText().toString();
-				String th = throttle.getText().toString();
->>>>>>> ea2c469... fix some bugs
                 String tr = trackball.getText().toString();
                 String na = nav.getText().toString();
                 String ma = majornav.getText().toString();
@@ -473,19 +439,11 @@ public class MainActivity extends Activity implements OnClickListener {
                 mDefaultCmd = "monkey " + mBlacklist + " " + mDebuggingSetting
                     + " " + mGeneralSetting + " " + mEventSetting + " " + mOutputSetting;
                 mFullCmd.setText(mDefaultCmd);
-<<<<<<< HEAD
             }
         });
         AlertDialog dialog = alert.create();
         dialog.show();
     }
-=======
-			}
-		});
-		AlertDialog dialog = alert.create();
-		dialog.show();
-	}
->>>>>>> ea2c469... fix some bugs
 
     private static void copyFileUsingFileStreams(File source, File dest) throws IOException {
         InputStream input = null;

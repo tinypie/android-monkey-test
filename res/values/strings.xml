@@ -15,20 +15,20 @@
     <string name="start">start</string>
     <string name="stop">stop</string>
     <string name="show_cmd">monkey cmd: </string>
-	<string name="result">monkey result: </string>
+    <string name="result">monkey result: </string>
     <!-- string name="android_log">/storage/emulated/legacy/monkey_log.txt</string -->
     <string name="android_log">/cache/android.txt</string>
-	
+
     <string name="scan_title">Scanning</string>
     <string name="scan_tip">Scanning,Please wait...</string>
-    
+
     <string name="blacklist_file"> /cache/blacklist.txt</string>
     <string name="general_string"> -v</string>
     <string name="events_string"> -s 1000 --pct-trackball 0 --pct-touch 0 --pct-motion 0 --pct-anyevent 0 --throttle 300 1200000000</string>
     <string name="debugging_string"> --ignore-crashes --ignore-timeouts --ignore-security-exceptions --kill-process-after-error</string>
-	<string name="log_place">save andoid log:</string>
-	
-	<string name="speed_text">speed</string>
+    <string name="log_place">save andoid log:</string>
+
+    <string name="speed_text">speed</string>
     <string name="positive">OK</string>
     <string name="negative">Cancel</string>
     <string name="throttle_text">throttle</string>
