@@ -15,9 +15,10 @@
     <string name="start">start</string>
     <string name="stop">stop</string>
     <string name="show_cmd">monkey cmd: </string>
+    <string name="copyLog">copy log</string>
     <string name="result">monkey result: </string>
     <!-- string name="android_log">/storage/emulated/legacy/monkey_log.txt</string -->
-    <string name="android_log">/cache/android.txt</string>
+    <string name="android_log">/cache/monkey num 10 every 2048 KB </string>
 
     <string name="scan_title">Scanning</string>
     <string name="scan_tip">Scanning,Please wait...</string>
@@ -41,4 +42,10 @@
     <string name="pct_syskeys">pct-syskeys</string>
     <string name="pct_appswitch">pct-appswitch</string>
     <string name="pct_anyevent">pct-anyevent</string>
+
+    <string name="logPlace_text">log location</string>
+    <string name="logSize_text">log size(KB)</string>
+    <string name="logNum_text">log number</string>
+    <string name="noMoveStorage">Please inset udisk or sdcard</string>
+
 </resources>

@@ -2,10 +2,12 @@ package com.droidlogic.monkeytest;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +17,8 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.os.storage.StorageManager;
+import android.os.storage.StorageVolume;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -27,6 +31,7 @@ public class FileSelectActivity extends Activity implements OnItemClickListener 
     private static final int MSG_NOTIFY_DATACHANGE = 3;
     private static final int WAITDIALOG_DISPALY_TIME = 500;
 
+    private StorageManager mStorageManager;
     private LayoutInflater mInflater;
     private FileAdapter mAdapter = new FileAdapter();
     private ListView mListView;
@@ -62,10 +67,27 @@ public class FileSelectActivity extends Activity implements OnItemClickListener 
         mHandler.sendMessageDelayed(nmsg, WAITDIALOG_DISPALY_TIME);
         new Thread() {
             public void run() {
-                File[] files = new File[2];
-                files[0] = new File ( "/cache" );
-                files[1] = new File ( "/storage/emulated" );
-                mAdapter.getList(files);
+                StorageVolume[] volumes = mStorageManager.getVolumeList();
+                ArrayList<File> files = new ArrayList();
+                for (int i = 0; i < volumes.length; i++) {
+                    if (volumes[i].isRemovable()) {
+                        String path = volumes[i].getPath();
+                        String state = mStorageManager.getVolumeState(path);
+                        if (Environment.MEDIA_MOUNTED.equals(state)) {
+                            files.add(new File(path));
+                        }
+                    }
+                }
+
+                files.add(new File("/cache"));
+
+                File[] mFiles;
+                mFiles = new File[files.size()];
+                for (int i = 0; i < files.size(); i++) {
+                    mFiles[i] = (File) files.get(i);
+                }
+
+                mAdapter.getList(mFiles);
                 mHandler.sendEmptyMessage(MSG_HIDE_SHOW_DIALOG);
             }
         } .start();
@@ -74,6 +96,7 @@ public class FileSelectActivity extends Activity implements OnItemClickListener 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mStorageManager = (StorageManager)getSystemService(Context.STORAGE_SERVICE);
         mInflater = LayoutInflater.from(this);
         setContentView(R.layout.file_select);
         mListView = (ListView) findViewById(R.id.file_list);

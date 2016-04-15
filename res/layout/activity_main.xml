@@ -166,12 +166,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/start" />
-
             <Button
                 android:id="@+id/button_stop"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/stop" />
+            <Button
+                android:id="@+id/button_copyLog"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/copyLog" />
         </LinearLayout>
 
         <TextView

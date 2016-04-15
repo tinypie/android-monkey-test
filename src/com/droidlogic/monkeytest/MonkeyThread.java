@@ -12,7 +12,7 @@ import java.io.InputStreamReader;
 
 public class MonkeyThread extends Thread {
     private static final String TAG = "monkeyThread";
-    static final boolean DEBUG = false;
+    static final boolean DEBUG = true;
 
     static boolean isRunning;
     static double runningTime;
@@ -54,7 +54,7 @@ public class MonkeyThread extends Thread {
             long startTime = System.currentTimeMillis();
             mMonkeyProcess = Runtime.getRuntime().exec(mCmd);
 
-            try {mMonkeyProcess.getErrorStream().close();} catch (IOException e) {}
+            //try {mMonkeyProcess.getErrorStream().close();} catch (IOException e) {}
 
             BufferedWriter logOutput =
                 new BufferedWriter(new FileWriter(new File("/data/log"), true));
@@ -62,13 +62,39 @@ public class MonkeyThread extends Thread {
             InputStream inStream = mMonkeyProcess.getInputStream();
             InputStreamReader inReader = new InputStreamReader(inStream);
             BufferedReader inBuffer = new BufferedReader(inReader);
-            String s;
-            while ((s = inBuffer.readLine()) != null) {
+            BufferedReader errBuffer = new BufferedReader(new InputStreamReader(mMonkeyProcess.getErrorStream()));
+
+            String s = null;
+            String errMsg = null;
+
+            while (((s = inBuffer.readLine()) != null) && ((errMsg = errBuffer.readLine()) != null)) {
                 if (DEBUG) {
                     logOutput.write(s);
                     logOutput.write("\n");
+                    logOutput.write(errMsg);
+                    logOutput.write("\n");
+                  //  Log.d(TAG, s);
                 }
             }
+
+            if (s != null) {
+                while ((s = inBuffer.readLine()) != null) {
+                    if (DEBUG) {
+                        logOutput.write(s);
+                        logOutput.write("\n");
+                       }
+                }
+            }
+
+            if (errMsg != null) {
+                while ((errMsg = inBuffer.readLine()) != null) {
+                    if (DEBUG) {
+                        logOutput.write(errMsg);
+                        logOutput.write("\n");
+                       }
+                }
+            }
+
 
             int status = mMonkeyProcess.waitFor();
             long endTime = System.currentTimeMillis();

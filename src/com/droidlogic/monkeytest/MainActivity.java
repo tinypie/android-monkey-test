@@ -8,6 +8,10 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.preference.PreferenceManager;
+import android.os.storage.StorageManager;
+import android.os.storage.StorageVolume;
+import android.os.Environment;
+import android.content.Context;
 
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -50,10 +54,12 @@ public class MainActivity extends Activity implements OnClickListener {
     private String mWhitelist;
     private String mDebuggingSetting = "--ignore-crashes --ignore-timeouts --ignore-security-exceptions --kill-process-after-error";
     private String mGeneralSetting = "-v ";
-    private String mOutputSetting = "2>&1";
+    private String mOutputSetting = "> /dev/null 2>&1";
     private String mConstraints;
     static final String LOGTIME = "/storage/emulated/legacy/time.txt";
     private String mLogFile = "/cache/android.log";
+    private String mLogSize = "2048";
+    private int mLogNum = 10;
     private String mKLog= "/cache/kernel.log";
     static String mDefaultCmd;
 
@@ -64,6 +70,7 @@ public class MainActivity extends Activity implements OnClickListener {
     private Button mSelectButton;
     private Button mLogButton;
     private Button mEventButton;
+    private Button mLogCpyButton;
 
     private TextView mBlacklistTextView;
     private TextView mGeneralTextView;
@@ -74,6 +81,8 @@ public class MainActivity extends Activity implements OnClickListener {
     private TextView mMonkeyResult;
     private TextView mLogSetting;
 
+    private StorageManager mStorageManager;
+
     MonkeyThread mMonkeyThread;
 
     @Override
@@ -81,12 +90,15 @@ public class MainActivity extends Activity implements OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mStorageManager = (StorageManager)getSystemService(Context.STORAGE_SERVICE);
+
         mStartButton = (Button) findViewById(R.id.button_start);
         mStopButton = (Button) findViewById(R.id.button_stop);
         mUseDefaultSetting = (Button) findViewById(R.id.button_default);
         mSelectButton = (Button) findViewById(R.id.button_blacklist);
         mLogButton = (Button) findViewById(R.id.button_log);
         mEventButton = (Button) findViewById(R.id.button_events);
+        mLogCpyButton = (Button) findViewById(R.id.button_copyLog);
 
         mDebugButton = (Button) findViewById(R.id.button_debugging);
         mDebuggingTextView = (TextView) findViewById(R.id.debugging_textview);
@@ -115,6 +127,8 @@ public class MainActivity extends Activity implements OnClickListener {
         mSelectButton.setOnClickListener(this);
         mLogButton.setOnClickListener(this);
         mEventButton.setOnClickListener(this);
+        mLogCpyButton.setOnClickListener(this);
+
         String time = SystemProperties.get("persist.monkey.test");
 
         if (mMonkeyThread.isRunning) {
@@ -128,16 +142,11 @@ public class MainActivity extends Activity implements OnClickListener {
             mMonkeyResult.setText("Previous Run time:" + time + " minutes");
         }
 
-        new Thread() {
-            public void run() {
-                try {
-                    copyBlacklist();
-                    startCopyLog();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }.start();
+        try {
+            copyBlacklist();
+        } catch (IOException e) {
+            Log.e(TAG, "copy black list error");
+        }
 
     }
 
@@ -200,8 +209,8 @@ public class MainActivity extends Activity implements OnClickListener {
                 mRunningTime = 0;
                 mMonkeyThread.init(mDefaultCmd);
                 MonkeyThread.getInstance().start();
-                startAndoridLog();
-                startKernelLog();
+                startLogThread();
+               // startKernelLog();
                 startTimeThread();
             } else {
                 Log.d(TAG, "monkey is already runing");
@@ -223,6 +232,8 @@ public class MainActivity extends Activity implements OnClickListener {
             break;
         case R.id.button_events:
             showEventsDialog();
+        case R.id.button_copyLog:
+            doCopyLog();
         }
 
     }
@@ -241,74 +252,50 @@ public class MainActivity extends Activity implements OnClickListener {
         mFullCmd.setText(mDefaultCmd);
     }
 
-    public void startAndoridLog() {
+    public void startLogThread() {
         new Thread() {
             public void run() {
                 Log.d(TAG, "logcat save to :" + mLogFile);
-                startLog("logcat -v time", mLogFile);
+                startLog();
             }
         }.start();
     }
 
 
     public void startKernelLog() {
-        /*
-        new Thread() {
-            public void run() {
-                Log.d(TAG, "kernel log save to :" + mKLog);
-                startLog("cat /proc/kmsg ", mKLog);
-            }
-        }.start();
-        */
-        SystemProperties.set("sys.debughelper.dump.kmsg","true");
+        SystemProperties.set("logd.klogd.dump","true");
     }
 
 
-    public void startLog(String cmd, String logFile) {
+    public void startLog() {
         try {
-            File file = new File(logFile);
-            if(file.exists() && file.delete()) {
-                Log.d(TAG, "previous log file: " + logFile + " is deleted");
+            String logFile;
+            for (int i = 0; i < mLogNum; i++) {
+                logFile = mLogFile + (i > 0 ? "."+i : "");
+                File file = new File(logFile);
+                if(file.exists() && file.delete()) {
+                    Log.d(TAG, "previous log file: " + logFile + " is deleted");
+                }
             }
         } catch(Exception e){
-            e.printStackTrace();
+            Log.d(TAG, "delet previous log file error");
+            //e.printStackTrace();
         }
 
         try {
             int status;
-            if (cmd.startsWith("logcat") ) {
-                Log.d(TAG, "exec logcat -c ");
-                Process logcat = Runtime.getRuntime().exec("logcat -c");
-                status = logcat.waitFor();
-            }
+            Log.d(TAG, "exec logcat -c ");
+            Process logcat = Runtime.getRuntime().exec("logcat -c");
+            status = logcat.waitFor();
 
-            /*
-            Process p = Runtime.getRuntime().exec("su");
-            status = p.waitFor();
-            Log.d(TAG, "su return : " + status);
-            */
+            String cmd = "logcat -b all -v time -f " + mLogFile + " -r " + mLogSize + " -n " + mLogNum + " &";
 
-            Process logcat = Runtime.getRuntime().exec(cmd);
-            BufferedWriter logOutput = new BufferedWriter(new FileWriter(new File(logFile), true));
-            InputStream inStream = logcat.getInputStream();
-            InputStreamReader inReader = new InputStreamReader(inStream);
-            BufferedReader inBuffer = new BufferedReader(inReader);
-            String s;
-            while ((s = inBuffer.readLine()) != null) {
-                if (true) {
-                    logOutput.write(s);
-                    logOutput.write("\n");
-                } else {
-                    System.err.println(s);
-                }
-            }
+            Log.d(TAG, " logcat cmd:" + cmd);
+            logcat = Runtime.getRuntime().exec(cmd);
 
             status = logcat.waitFor();
             Log.d(TAG, "cmd :" + cmd + " returned " + status);
 
-            if (logOutput != null) {
-                logOutput.close();
-            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (InterruptedException e) {
@@ -355,21 +342,31 @@ public class MainActivity extends Activity implements OnClickListener {
     }
 
     private void showEditDialog() {
+        LayoutInflater inflater = getLayoutInflater();
+        View alertLayout = inflater.inflate(R.layout.log_dialog, null);
+
+        final EditText place = (EditText) alertLayout.findViewById(R.id.logPlace_editText);
+        final EditText size = (EditText) alertLayout.findViewById(R.id.logSize_editText);
+        final EditText number = (EditText) alertLayout.findViewById(R.id.logNum_editText);
+
+        place.setText("/cache/monkey");
+        size.setText("2048");
+        number.setText("10");
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Android logfile save place");
+        builder.setView(alertLayout);
+        builder.setCancelable(false);
 
-        final EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        input.setText(mLogFile);
-        builder.setView(input);
 
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                String file = input.getText().toString();
-                mLogFile = file;
-                mLogSetting.setText(file);
-                Log.d(TAG, "set android log file to:" + file);
+                mLogFile = place.getText().toString();
+                mLogSize = size.getText().toString();
+                mLogNum = Integer.parseInt(number.getText().toString());
+                mLogSetting.setText(mLogFile + " num " + mLogNum + " every " + mLogSize + "kb");
+                Log.d(TAG, "set android log file to:" + mLogFile);
             }
         });
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -477,6 +474,8 @@ public class MainActivity extends Activity implements OnClickListener {
             while ((bytesRead = input.read(buf)) > 0) {
                 output.write(buf, 0, bytesRead);
             }
+        } catch (IOException e) {
+            //
         } finally {
             if (input != null)
                 input.close();
@@ -485,25 +484,54 @@ public class MainActivity extends Activity implements OnClickListener {
         }
     }
 
-    public void startCopyLog() throws IOException {
-        File androidLog = new File(mLogFile);
-        File kernelLog = new File(mKLog);
-        if (androidLog.exists() && !androidLog.isDirectory()) {
-            File dest = new File("/storage/emulated/legacy/android.log");
-            copyFileUsingFileStreams(androidLog, dest);
-        } else {
-            Log.d(TAG, "android log not exists");
+    public int startCopyLog() throws IOException {
+        StorageVolume[] volumes = mStorageManager.getVolumeList();
+        String destPath = null;
+
+        for (int i = 0; i < volumes.length; i++) {
+            if (volumes[i].isRemovable()) {
+                String path = volumes[i].getPath();
+                String state = mStorageManager.getVolumeState(path);
+                if (Environment.MEDIA_MOUNTED.equals(state)) {
+                    destPath = path;
+                    break;
+                }
+            }
         }
 
-        if (kernelLog.exists() && !kernelLog.isDirectory()) {
-            File dest = new File("/storage/emulated/legacy/kernel.log");
-            copyFileUsingFileStreams(kernelLog, dest);
-        } else {
-            Log.d(TAG, "kenrel log not exits");
+        if (destPath == null) {
+            //Toast.makeText(MainActivity.this, R.string.noMoveStorage,
+            //       Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "no external storage");
+            return -1;
         }
+
+        destPath = destPath + "/monkeylog";
+        try {
+            File f = new File(destPath);
+            f.mkdir();
+        } catch (Exception e) {
+            Log.e(TAG, "mkdir error");
+            return -1;
+        }
+
+        for (int i = 0; i < mLogNum; i++) {
+            String sourcePath = mLogFile + (i > 0 ? "."+i : "");
+            File source = new File(sourcePath);
+
+            if (DEBUG) Log.d(TAG, "source file:" + source);
+            if (source.exists() && !source.isDirectory()) {
+                File dest = new File(destPath + "/" + source.getName());
+                if (DEBUG) Log.d(TAG, "dest file:" + dest);
+                copyFileUsingFileStreams(source, dest);
+            } else {
+                Log.d(TAG, "android log not exists");
+            }
+        }
+        return 0;
     }
 
-    public void onStopButtonClicked() {
+	public void onStopButtonClicked() {
         int pid = -1;
         Runtime runtime = Runtime.getRuntime();
         String prog = "ps | grep \"commands.monkey\" | busybox awk '{print $2}'";
@@ -529,5 +557,17 @@ public class MainActivity extends Activity implements OnClickListener {
         } catch (Exception e) {
             Log.d(TAG,"runtime error = " + e);
         }
+    }
+    public void doCopyLog() {
+        new Thread() {
+            public void run() {
+                try {
+                    startCopyLog();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+
     }
 }
